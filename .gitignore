@@ -139,3 +139,9 @@ cython_debug/
 
 # IDE folders
 .idea/
+
+# Glove model
+glove.6B.100d.txt
+
+# ipynb under question 2
+question_2/*.ipynb
