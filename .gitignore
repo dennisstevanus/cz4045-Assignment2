@@ -146,3 +146,6 @@ glove.6B.100d.txt
 # ipynb under question 2
 question_2/*.ipynb
 question_2/data/*.pkl
+
+# Resulting models
+models/

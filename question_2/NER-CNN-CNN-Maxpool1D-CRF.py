@@ -1349,7 +1349,7 @@ if not parameters['reload']:
                 print(cur - start)
                 print('[%d, %5d] loss: %.3f' %
                       (epoch, counter, loss))
-                losses.append(loss)
+                losses.append(loss.item())
                 loss = 0.0
             # if count % plot_every == 0:
             #     print("test {}".format(i))
