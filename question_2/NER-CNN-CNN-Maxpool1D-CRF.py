@@ -54,16 +54,6 @@
 #
 #  To get started we first import the necessary libraries
 
-# In[2]:
-
-
-print("test")
-
-
-# In[3]:
-
-
-from __future__ import print_function
 from collections import OrderedDict
 
 import torch
@@ -77,6 +67,7 @@ import _pickle as cPickle
 
 import urllib
 import matplotlib.pyplot as plt
+
 plt.rcParams['figure.dpi'] = 80
 plt.style.use('seaborn-pastel')
 
@@ -87,7 +78,6 @@ import re
 import numpy as np
 import pandas as pd
 
-
 # ##### Define constants and paramaters
 
 # We now define some constants and parameters that we will be using later
@@ -95,57 +85,55 @@ import pandas as pd
 # In[4]:
 
 
-#parameters for the Model
+# parameters for the Model
 parameters = OrderedDict()
-parameters['train'] = "./data/eng.train" #Path to train file
-parameters['dev'] = "./data/eng.testa" #Path to test file
-parameters['test'] = "./data/eng.testb" #Path to dev file
-parameters['tag_scheme'] = "BIOES" #BIO or BIOES
-parameters['lower'] = True # Boolean variable to control lowercasing of words
-parameters['zeros'] =  True # Boolean variable to control replacement of  all digits by 0
-parameters['char_dim'] = 30 #Char embedding dimension
-parameters['word_dim'] = 100 #Token embedding dimension
-parameters['word_lstm_dim'] = 200 #Token LSTM hidden layer size
-parameters['word_bidirect'] = True #Use a bidirectional LSTM for words
-parameters['embedding_path'] = "./data/glove.6B.100d.txt" #Location of pretrained embeddings
-parameters['all_emb'] = 1 #Load all embeddings
-parameters['crf'] =1 #Use CRF (0 to disable)
-parameters['dropout'] = 0.5 #Dropout on the input (0 = no dropout)
-parameters['epoch'] =  50 #Number of epochs to run"
-parameters['weights'] = "" #path to Pretrained for from a previous run
-parameters['name'] = "self-trained-model-cnn" # Model name
-parameters['gradient_clip']=5.0
-parameters['char_mode']="CNN"
-models_path = "./models/" #path to saved models
+parameters['train'] = "./data/eng.train"  # Path to train file
+parameters['dev'] = "./data/eng.testa"  # Path to test file
+parameters['test'] = "./data/eng.testb"  # Path to dev file
+parameters['tag_scheme'] = "BIOES"  # BIO or BIOES
+parameters['lower'] = True  # Boolean variable to control lowercasing of words
+parameters['zeros'] = True  # Boolean variable to control replacement of  all digits by 0
+parameters['char_dim'] = 30  # Char embedding dimension
+parameters['word_dim'] = 100  # Token embedding dimension
+parameters['word_lstm_dim'] = 200  # Token LSTM hidden layer size
+parameters['word_bidirect'] = True  # Use a bidirectional LSTM for words
+parameters['embedding_path'] = "./data/glove.6B.100d.txt"  # Location of pretrained embeddings
+parameters['all_emb'] = 1  # Load all embeddings
+parameters['crf'] = 1  # Use CRF (0 to disable)
+parameters['dropout'] = 0.5  # Dropout on the input (0 = no dropout)
+parameters['epoch'] = 50  # Number of epochs to run"
+parameters['weights'] = ""  # path to Pretrained for from a previous run
+parameters['name'] = "self-trained-model-cnn-max_pool_1d"  # Model name
+parameters['gradient_clip'] = 5.0
+parameters['char_mode'] = "CNN"
+models_path = "./models/"  # path to saved models
 
-#GPU
-parameters['use_gpu'] = torch.cuda.is_available() #GPU Check
+# GPU
+parameters['use_gpu'] = torch.cuda.is_available()  # GPU Check
 use_gpu = parameters['use_gpu']
 # use_gpu = False
 
 parameters['reload'] = "./models/pre-trained-model"
 
-#Constants
+# Constants
 START_TAG = '<START>'
 STOP_TAG = '<STOP>'
-
 
 # In[5]:
 
 
 use_gpu
 
-
 # In[6]:
 
 
-#paths to files
-#To stored mapping file
+# paths to files
+# To stored mapping file
 mapping_file = './data/mapping.pkl'
 
-#To stored model
+# To stored model
 name = parameters['name']
-model_name = models_path + name #get_name(parameters)
+model_name = models_path + name  # get_name(parameters)
 
 if not os.path.exists(models_path):
     os.makedirs(models_path)
@@ -170,6 +158,7 @@ def zero_digits(s):
     Replace every digit in a string by a zero.
     """
     return re.sub('\d', '0', s)
+
 
 def load_sentences(path, zeros):
     """
@@ -201,7 +190,6 @@ def load_sentences(path, zeros):
 train_sentences = load_sentences(parameters['train'], parameters['zeros'])
 test_sentences = load_sentences(parameters['test'], parameters['zeros'])
 dev_sentences = load_sentences(parameters['dev'], parameters['zeros'])
-
 
 # In[9]:
 
@@ -247,6 +235,7 @@ def iob2(tags):
             tags[i] = 'B' + tag[1:]
     return True
 
+
 def iob_iobes(tags):
     """
     the function is used to convert
@@ -257,18 +246,19 @@ def iob_iobes(tags):
         if tag == 'O':
             new_tags.append(tag)
         elif tag.split('-')[0] == 'B':
-            if i + 1 != len(tags) and                tags[i + 1].split('-')[0] == 'I':
+            if i + 1 != len(tags) and tags[i + 1].split('-')[0] == 'I':
                 new_tags.append(tag)
             else:
                 new_tags.append(tag.replace('B-', 'S-'))
         elif tag.split('-')[0] == 'I':
-            if i + 1 < len(tags) and                     tags[i + 1].split('-')[0] == 'I':
+            if i + 1 < len(tags) and tags[i + 1].split('-')[0] == 'I':
                 new_tags.append(tag)
             else:
                 new_tags.append(tag.replace('I-', 'E-'))
         else:
             raise Exception('Invalid IOB format!')
     return new_tags
+
 
 def update_tag_scheme(sentences, tag_scheme):
     """
@@ -323,6 +313,7 @@ def create_dico(item_list):
                 dico[item] += 1
     return dico
 
+
 def create_mapping(dico):
     """
     Create a mapping (item to ID / ID to item) from a dictionary.
@@ -333,18 +324,20 @@ def create_mapping(dico):
     item_to_id = {v: k for k, v in id_to_item.items()}
     return item_to_id, id_to_item
 
+
 def word_mapping(sentences, lower):
     """
     Create a dictionary and a mapping of words, sorted by frequency.
     """
     words = [[x[0].lower() if lower else x[0] for x in s] for s in sentences]
     dico = create_dico(words)
-    dico['<UNK>'] = 10000000 #UNK tag for unknown words
+    dico['<UNK>'] = 10000000  # UNK tag for unknown words
     word_to_id, id_to_word = create_mapping(dico)
     print("Found %i unique words (%i in total)" % (
         len(dico), sum(len(x) for x in words)
     ))
     return dico, word_to_id, id_to_word
+
 
 def char_mapping(sentences):
     """
@@ -355,6 +348,7 @@ def char_mapping(sentences):
     char_to_id, id_to_char = create_mapping(dico)
     print("Found %i unique characters" % len(dico))
     return dico, char_to_id, id_to_char
+
 
 def tag_mapping(sentences):
     """
@@ -372,7 +366,7 @@ def tag_mapping(sentences):
 # In[13]:
 
 
-dico_words,word_to_id,id_to_word = word_mapping(train_sentences, parameters['lower'])
+dico_words, word_to_id, id_to_word = word_mapping(train_sentences, parameters['lower'])
 dico_chars, char_to_id, id_to_char = char_mapping(train_sentences)
 dico_tags, tag_to_id, id_to_tag = tag_mapping(train_sentences)
 
@@ -390,7 +384,7 @@ dico_tags, tag_to_id, id_to_tag = tag_mapping(train_sentences)
 # In[14]:
 
 
-def lower_case(x,lower=False):
+def lower_case(x, lower=False):
     if lower:
         return x.lower()
     else:
@@ -410,7 +404,7 @@ def prepare_dataset(sentences, word_to_id, char_to_id, tag_to_id, lower=False):
     data = []
     for s in sentences:
         str_words = [w[0] for w in s]
-        words = [word_to_id[lower_case(w,lower) if lower_case(w,lower) in word_to_id else '<UNK>']
+        words = [word_to_id[lower_case(w, lower) if lower_case(w, lower) in word_to_id else '<UNK>']
                  for w in str_words]
         # Skip characters that are not in the training set
         chars = [[char_to_id[c] for c in w if c in char_to_id]
@@ -424,6 +418,7 @@ def prepare_dataset(sentences, word_to_id, char_to_id, tag_to_id, lower=False):
         })
     return data
 
+
 train_data = prepare_dataset(
     train_sentences, word_to_id, char_to_id, tag_to_id, parameters['lower']
 )
@@ -434,7 +429,6 @@ test_data = prepare_dataset(
     test_sentences, word_to_id, char_to_id, tag_to_id, parameters['lower']
 )
 print("{} / {} / {} sentences in train / dev / test.".format(len(train_data), len(dev_data), len(test_data)))
-
 
 # We are  done with the preprocessing step for input data. It ready to be given as input to the model ! ! !
 
@@ -453,7 +447,7 @@ for i, line in enumerate(codecs.open(parameters['embedding_path'], 'r', 'utf-8')
     if len(s) == parameters['word_dim'] + 1:
         all_word_embeds[s[0]] = np.array([float(i) for i in s[1:]])
 
-#Intializing Word Embedding Matrix
+# Intializing Word Embedding Matrix
 word_embeds = np.random.uniform(-np.sqrt(0.06), np.sqrt(0.06), (len(word_to_id), parameters['word_dim']))
 
 for w in word_to_id:
@@ -463,7 +457,6 @@ for w in word_to_id:
         word_embeds[word_to_id[w]] = all_word_embeds[w.lower()]
 
 print('Loaded %i pretrained embeddings.' % len(all_word_embeds))
-
 
 # ##### Storing Processed Data for Reuse
 #
@@ -545,7 +538,6 @@ def init_lstm(input_lstm):
 
     # Weights init for forward layer
     for ind in range(0, input_lstm.num_layers):
-
         ## Gets the weights Tensor from our model, for the input-hidden weights in our current layer
         weight = eval('input_lstm.weight_ih_l' + str(ind))
 
@@ -559,7 +551,6 @@ def init_lstm(input_lstm):
         weight = eval('input_lstm.weight_hh_l' + str(ind))
         sampling_range = np.sqrt(6.0 / (weight.size(0) / 4 + weight.size(1)))
         nn.init.uniform(weight, -sampling_range, sampling_range)
-
 
     # We do the above again, for the backward layer if we are using a bi-directional LSTM (our final model uses this)
     if input_lstm.bidirectional:
@@ -584,7 +575,7 @@ def init_lstm(input_lstm):
             # This is the range of indices for our forget gates for each LSTM cell
             bias.data[input_lstm.hidden_size: 2 * input_lstm.hidden_size] = 1
 
-            #Similar for the hidden-hidden layer
+            # Similar for the hidden-hidden layer
             bias = eval('input_lstm.bias_hh_l' + str(ind))
             bias.data.zero_()
             bias.data[input_lstm.hidden_size: 2 * input_lstm.hidden_size] = 1
@@ -660,12 +651,14 @@ def log_sum_exp(vec):
     max_score_broadcast = max_score.view(1, -1).expand(1, vec.size()[1])
     return max_score + torch.log(torch.sum(torch.exp(vec - max_score_broadcast)))
 
+
 def argmax(vec):
     '''
     This function returns the max index in a vector
     '''
     _, idx = torch.max(vec, 1)
     return to_scalar(idx)
+
 
 def to_scalar(var):
     '''
@@ -743,7 +736,7 @@ def forward_alg(self, feats):
         tag_var = tag_var - max_tag_var.view(-1, 1)
 
         # Compute log sum exp in a numerically stable way for the forward algorithm
-        forward_var = max_tag_var + torch.log(torch.sum(torch.exp(tag_var), dim=1)).view(1, -1) # ).view(1, -1)
+        forward_var = max_tag_var + torch.log(torch.sum(torch.exp(tag_var), dim=1)).view(1, -1)  # ).view(1, -1)
     terminal_var = (forward_var + self.transitions[self.tag_to_ix[STOP_TAG]]).view(1, -1)
     alpha = log_sum_exp(terminal_var)
     # Z(x)
@@ -788,9 +781,9 @@ def viterbi_algo(self, feats):
     for feat in feats:
         next_tag_var = forward_var.view(1, -1).expand(self.tagset_size, self.tagset_size) + self.transitions
         _, bptrs_t = torch.max(next_tag_var, dim=1)
-        bptrs_t = bptrs_t.squeeze().data.cpu().numpy() # holds the backpointers for this step
+        bptrs_t = bptrs_t.squeeze().data.cpu().numpy()  # holds the backpointers for this step
         next_tag_var = next_tag_var.data.cpu().numpy()
-        viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t] # holds the viterbi variables for this step
+        viterbivars_t = next_tag_var[range(len(bptrs_t)), bptrs_t]  # holds the viterbi variables for this step
         viterbivars_t = Variable(torch.FloatTensor(viterbivars_t))
         if self.use_gpu:
             viterbivars_t = viterbivars_t.cuda()
@@ -815,7 +808,7 @@ def viterbi_algo(self, feats):
 
     # Pop off the start tag (we dont want to return that to the caller)
     start = best_path.pop()
-    assert start == self.tag_to_ix[START_TAG] # Sanity check
+    assert start == self.tag_to_ix[START_TAG]  # Sanity check
     best_path.reverse()
     return path_score, best_path
 
@@ -882,7 +875,7 @@ def viterbi_algo(self, feats):
 class FinalNN(nn.Module):
 
     def __init__(self, vocab_size, tag_to_ix, embedding_dim, hidden_dim,
-                 char_to_ix=None, pre_word_embeds=None, char_out_dimension=25,char_embedding_dim=25, use_gpu=False
+                 char_to_ix=None, pre_word_embeds=None, char_out_dimension=25, char_embedding_dim=25, use_gpu=False
                  , use_crf=True, char_mode='CNN'):
         super(FinalNN, self).__init__()
 
@@ -899,33 +892,34 @@ class FinalNN(nn.Module):
         if char_embedding_dim is not None:
             self.char_embedding_dim = char_embedding_dim
 
-            #Initializing the character embedding layer
+            # Initializing the character embedding layer
             self.char_embeds = nn.Embedding(len(char_to_ix), char_embedding_dim)
             init_embedding(self.char_embeds.weight)
 
-            #Performing LSTM encoding on the character embeddings
+            # Performing LSTM encoding on the character embeddings
             if self.char_mode == 'LSTM':
                 self.char_lstm = nn.LSTM(char_embedding_dim, char_lstm_dim, num_layers=1, bidirectional=True)
                 init_lstm(self.char_lstm)
 
-            #Performing CNN encoding on the character embeddings
+            # Performing CNN encoding on the character embeddings
             if self.char_mode == 'CNN':
-                self.char_cnn3 = nn.Conv2d(in_channels=1, out_channels=self.out_channels, kernel_size=(3, char_embedding_dim), padding=(2,0))
+                self.char_cnn3 = nn.Conv2d(in_channels=1, out_channels=self.out_channels,
+                                           kernel_size=(3, char_embedding_dim), padding=(2, 0))
 
-        #Creating Embedding layer with dimension of ( number of words * dimension of each word)
+        # Creating Embedding layer with dimension of ( number of words * dimension of each word)
         self.word_embeds = nn.Embedding(vocab_size, embedding_dim)
         if pre_word_embeds is not None:
-            #Initializes the word embeddings with pretrained word embeddings
+            # Initializes the word embeddings with pretrained word embeddings
             self.pre_word_embeds = True
             self.word_embeds.weight = nn.Parameter(torch.FloatTensor(pre_word_embeds))
         else:
             self.pre_word_embeds = False
 
-        #Initializing the dropout layer, with dropout specificed in parameters
+        # Initializing the dropout layer, with dropout specificed in parameters
         self.dropout = nn.Dropout(parameters['dropout'])
 
-        #Word CNN layer
-        #input dimension: word embedding dimension + character level representation
+        # Word CNN layer
+        # input dimension: word embedding dimension + character level representation
 
         #         self.lstm = nn.LSTM(embedding_dim+self.out_channels, hidden_dim, bidirectional=True)
 
@@ -933,9 +927,9 @@ class FinalNN(nn.Module):
         self.word_max_pool = nn.MaxPool1d(3, stride=1, padding=1)
 
         # Linear layer which maps the output of the bidirectional LSTM into tag space.
-        self.hidden2tag = nn.Linear(hidden_dim*2, self.tagset_size)
+        self.hidden2tag = nn.Linear(hidden_dim * 2, self.tagset_size)
 
-        #Initializing the linear layer using predefined function for initialization
+        # Initializing the linear layer using predefined function for initialization
         init_linear(self.hidden2tag)
 
         if self.use_crf:
@@ -949,7 +943,7 @@ class FinalNN(nn.Module):
             self.transitions.data[tag_to_ix[START_TAG], :] = -10000
             self.transitions.data[:, tag_to_ix[STOP_TAG]] = -10000
 
-    #assigning the functions, which we have defined earlier
+    # assigning the functions, which we have defined earlier
     _score_sentence = score_sentences
 
     _forward_alg = forward_alg
@@ -988,7 +982,6 @@ class FinalNN(nn.Module):
 
         return score, tag_seq
 
-
     def _get_cnn_features(self, sentence, chars2, chars2_length, d):
         # Char embedding
         chars_embeds = self.char_embeds(chars2).unsqueeze(1)
@@ -997,7 +990,8 @@ class FinalNN(nn.Module):
         ## followed by a Maxpooling Layer
         chars_cnn_out3 = self.char_cnn3(chars_embeds)
         chars_embeds = nn.functional.max_pool2d(chars_cnn_out3,
-                                                kernel_size=(chars_cnn_out3.size(2), 1)).view(chars_cnn_out3.size(0), self.out_channels)
+                                                kernel_size=(chars_cnn_out3.size(2), 1)).view(chars_cnn_out3.size(0),
+                                                                                              self.out_channels)
 
         ## Loading word embeddings
         embeds = self.word_embeds(sentence)
@@ -1020,7 +1014,7 @@ class FinalNN(nn.Module):
         cnn_out = self.word_max_pool(cnn_out)
 
         ## Reshaping the outputs from the CNN layer
-        cnn_out = cnn_out.view(len(sentence), 2*self.hidden_dim)
+        cnn_out = cnn_out.view(len(sentence), 2 * self.hidden_dim)
 
         ## CNN on the lstm output
         cnn_out = self.dropout(cnn_out)
@@ -1031,11 +1025,10 @@ class FinalNN(nn.Module):
         return cnn_out
 
 
-
 # In[26]:
 
 
-#creating the model using the Class defined above
+# creating the model using the Class defined above
 model = FinalNN(vocab_size=len(word_to_id),
                 tag_to_ix=tag_to_id,
                 embedding_dim=parameters['word_dim'],
@@ -1049,11 +1042,10 @@ print("Model Initialized!!!")
 if use_gpu:
     model.cuda()
 
-
 # In[27]:
 
 
-#Reload a saved model, if parameter["reload"] is set to a path
+# Reload a saved model, if parameter["reload"] is set to a path
 # if parameters['reload']:
 #     if not os.path.exists(parameters['reload']):
 #         print("downloading pre-trained model")
@@ -1070,10 +1062,10 @@ if use_gpu:
 # In[28]:
 
 
-#Initializing the optimizer
-#The best results in the paper where achived using stochastic gradient descent (SGD)
-#learning rate=0.015 and momentum=0.9
-#decay_rate=0.05
+# Initializing the optimizer
+# The best results in the paper where achived using stochastic gradient descent (SGD)
+# learning rate=0.015 and momentum=0.9
+# decay_rate=0.05
 
 learning_rate = 0.015
 momentum = 0.9
@@ -1082,16 +1074,16 @@ decay_rate = 0.05
 gradient_clip = parameters['gradient_clip']
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
-#variables which will used in training process
-losses = [] #list to store all losses
-loss = 0.0 #Loss Initializatoin
-best_dev_F = -1.0 # Current best F-1 Score on Dev Set
-best_test_F = -1.0 # Current best F-1 Score on Test Set
-best_train_F = -1.0 # Current best F-1 Score on Train Set
-all_F = [[0, 0, 0]] # List storing all the F-1 Scores
-eval_every = len(train_data) # Calculate F-1 Score after this many iterations
-plot_every = 2000 # Store loss after this many iterations
-count = 0 #Counts the number of iterations
+# variables which will used in training process
+losses = []  # list to store all losses
+loss = 0.0  # Loss Initializatoin
+best_dev_F = -1.0  # Current best F-1 Score on Dev Set
+best_test_F = -1.0  # Current best F-1 Score on Test Set
+best_train_F = -1.0  # Current best F-1 Score on Train Set
+all_F = [[0, 0, 0]]  # List storing all the F-1 Scores
+eval_every = len(train_data)  # Calculate F-1 Score after this many iterations
+plot_every = 2000  # Store loss after this many iterations
+count = 0  # Counts the number of iterations
 
 
 # ### Evaluation
@@ -1184,7 +1176,7 @@ def get_chunks(seq, tags):
 # In[31]:
 
 
-def evaluating(model, datas, best_F,dataset="Train"):
+def evaluating(model, datas, best_F, dataset="Train"):
     '''
     The function takes as input the model, data and calcuates F-1 Score
     It performs conditional updates
@@ -1193,10 +1185,10 @@ def evaluating(model, datas, best_F,dataset="Train"):
     ,if the F-1 score calculated improves on the previous F-1 score
     '''
     # Initializations
-    prediction = [] # A list that stores predicted tags
-    save = False # Flag that tells us if the model needs to be saved
-    new_F = 0.0 # Variable to store the current F1-Score (may not be the best)
-    correct_preds, total_correct, total_preds = 0., 0., 0. # Count variables
+    prediction = []  # A list that stores predicted tags
+    save = False  # Flag that tells us if the model needs to be saved
+    new_F = 0.0  # Variable to store the current F1-Score (may not be the best)
+    correct_preds, total_correct, total_preds = 0., 0., 0.  # Count variables
 
     for data in datas:
         ground_truth_id = data['tags']
@@ -1218,7 +1210,6 @@ def evaluating(model, datas, best_F,dataset="Train"):
                 chars2_mask[i, :chars2_length[i]] = c
             chars2_mask = Variable(torch.LongTensor(chars2_mask))
 
-
         if parameters['char_mode'] == 'CNN':
             d = {}
 
@@ -1234,36 +1225,35 @@ def evaluating(model, datas, best_F,dataset="Train"):
 
         # We are getting the predicted output from our model
         if use_gpu:
-            val,out = model(dwords.cuda(), chars2_mask.cuda(), chars2_length, d)
+            val, out = model(dwords.cuda(), chars2_mask.cuda(), chars2_length, d)
         else:
-            val,out = model(dwords, chars2_mask, chars2_length, d)
+            val, out = model(dwords, chars2_mask, chars2_length, d)
         predicted_id = out
-
 
         # We use the get chunks function defined above to get the true chunks
         # and the predicted chunks from true labels and predicted labels respectively
-        lab_chunks      = set(get_chunks(ground_truth_id,tag_to_id))
+        lab_chunks = set(get_chunks(ground_truth_id, tag_to_id))
         lab_pred_chunks = set(get_chunks(predicted_id,
                                          tag_to_id))
 
         # Updating the count variables
         correct_preds += len(lab_chunks & lab_pred_chunks)
-        total_preds   += len(lab_pred_chunks)
+        total_preds += len(lab_pred_chunks)
         total_correct += len(lab_chunks)
 
     # Calculating the F1-Score
-    p   = correct_preds / total_preds if correct_preds > 0 else 0
-    r   = correct_preds / total_correct if correct_preds > 0 else 0
-    new_F  = 2 * p * r / (p + r) if correct_preds > 0 else 0
+    p = correct_preds / total_preds if correct_preds > 0 else 0
+    r = correct_preds / total_correct if correct_preds > 0 else 0
+    new_F = 2 * p * r / (p + r) if correct_preds > 0 else 0
 
-    print("{}: new_F: {} best_F: {} ".format(dataset,new_F,best_F))
+    print("{}: new_F: {} best_F: {} ".format(dataset, new_F, best_F))
 
     # If our current F1-Score is better than the previous best, we update the best
     # to current F1 and we set the flag to indicate that we need to checkpoint this model
 
-    if new_F>best_F:
-        best_F=new_F
-        save=True
+    if new_F > best_F:
+        best_F = new_F
+        save = True
 
     return best_F, new_F, save
 
@@ -1289,14 +1279,15 @@ def adjust_learning_rate(optimizer, lr):
 
 
 import time
-parameters['reload']=False
+
+parameters['reload'] = False
 
 if not parameters['reload']:
     tr = time.time()
     model.train(True)
     start = time.time()
     #     loader = DataLoader(train_data, batch_size=32, shuffle=True)
-    for epoch in range(1,number_of_epochs):
+    for epoch in range(1, number_of_epochs):
         loss = 0.0
         for counter, index in enumerate(np.random.permutation(len(train_data))):
             count += 1
@@ -1337,73 +1328,71 @@ if not parameters['reload']:
                     chars2_mask[i, :chars2_length[i]] = c
                 chars2_mask = Variable(torch.LongTensor(chars2_mask))
 
-
             targets = torch.LongTensor(tags)
 
-            #we calculate the negative log-likelihood for the predicted tags using the predefined function
+            # we calculate the negative log-likelihood for the predicted tags using the predefined function
             if use_gpu:
-                neg_log_likelihood = model.neg_log_likelihood(sentence_in.cuda(), targets.cuda(), chars2_mask.cuda(), chars2_length, d)
+                neg_log_likelihood = model.neg_log_likelihood(sentence_in.cuda(), targets.cuda(), chars2_mask.cuda(),
+                                                              chars2_length, d)
             else:
                 neg_log_likelihood = model.neg_log_likelihood(sentence_in, targets, chars2_mask, chars2_length, d)
             loss += neg_log_likelihood.data / len(data['words'])
             neg_log_likelihood.backward()
 
-            #we use gradient clipping to avoid exploding gradients
+            # we use gradient clipping to avoid exploding gradients
             torch.nn.utils.clip_grad_norm(model.parameters(), gradient_clip)
             optimizer.step()
 
-            #Storing loss
-            if counter% plot_every == 0 and counter!=0:
+            # Storing loss
+            if counter % plot_every == 0 and counter != 0:
                 cur = time.time()
                 print(cur - start)
                 print('[%d, %5d] loss: %.3f' %
-                      (epoch, counter , loss))
+                      (epoch, counter, loss))
                 losses.append(loss)
                 loss = 0.0
             # if count % plot_every == 0:
             #     print("test {}".format(i))
 
-            #Evaluating on Train, Test, Dev Sets
-            if count % (eval_every) == 0 and count > (eval_every * 20) or count % (eval_every*4) == 0 and count < (eval_every * 20):
+            # Evaluating on Train, Test, Dev Sets
+            if count % (eval_every) == 0 and count > (eval_every * 20) or count % (eval_every * 4) == 0 and count < (
+                    eval_every * 20):
                 print("evaluating model...")
                 model.train(False)
-                best_train_F, new_train_F, _ = evaluating(model, train_data, best_train_F,"Train")
-                best_dev_F, new_dev_F, save = evaluating(model, dev_data, best_dev_F,"Dev")
+                best_train_F, new_train_F, _ = evaluating(model, train_data, best_train_F, "Train")
+                best_dev_F, new_dev_F, save = evaluating(model, dev_data, best_dev_F, "Dev")
                 if save:
                     print("Saving Model to ", model_name)
                     torch.save(model.state_dict(), model_name)
-                best_test_F, new_test_F, _ = evaluating(model, test_data, best_test_F,"Test")
+                best_test_F, new_test_F, _ = evaluating(model, test_data, best_test_F, "Test")
 
                 all_F.append([epoch, new_train_F, new_dev_F, new_test_F])
                 model.train(True)
 
-            #Performing decay on the learning rate
+            # Performing decay on the learning rate
             if count % len(train_data) == 0:
-                adjust_learning_rate(optimizer, lr=learning_rate/(1+decay_rate*count/len(train_data)))
+                adjust_learning_rate(optimizer, lr=learning_rate / (1 + decay_rate * count / len(train_data)))
 
         print("Time elapsed to train=", time.time() - tr, "seconds")
-    df_loss = pd.DataFrame (losses,columns=['loss'])
-    df_acc = pd.DataFrame (all_F,columns=['epoch', 'train_F,','dev_F','test_F'])
+    df_loss = pd.DataFrame(losses, columns=['loss'])
+    df_acc = pd.DataFrame(all_F, columns=['epoch', 'train_F,', 'dev_F', 'test_F'])
     plt.plot(losses)
-    plt.savefig(os.path.join(models_path, parameters['name']+"-loss.png"), format="png")
+    plt.savefig(os.path.join(models_path, parameters['name'] + "-loss.png"), format="png")
 
 if not parameters['reload']:
-    #reload the best model saved from training
+    # reload the best model saved from training
     model.load_state_dict(torch.load(model_name))
-
 
 # In[37]:
 
 
-df_loss.to_csv (os.path.join(models_path, parameters['name']+"-losses.csv"), index = False, header=True)
-df_acc.to_csv (os.path.join(models_path, parameters['name']+"-acuracy.csv"), index = False, header=True)
-
+df_loss.to_csv(os.path.join(models_path, parameters['name'] + "-losses.csv"), index=False, header=True)
+df_acc.to_csv(os.path.join(models_path, parameters['name'] + "-acuracy.csv"), index=False, header=True)
 
 # In[ ]:
 
 
 eval_every
-
 
 # ### Model Testing
 #
@@ -1415,17 +1404,17 @@ eval_every
 # In[ ]:
 
 
-model_testing_sentences = ['Jay is from India','Donald is the president of USA']
+model_testing_sentences = ['Jay is from India', 'Donald is the president of USA']
 
-#parameters
-lower=parameters['lower']
+# parameters
+lower = parameters['lower']
 
-#preprocessing
+# preprocessing
 final_test_data = []
 for sentence in model_testing_sentences:
-    s=sentence.split()
+    s = sentence.split()
     str_words = [w for w in s]
-    words = [word_to_id[lower_case(w,lower) if lower_case(w,lower) in word_to_id else '<UNK>'] for w in str_words]
+    words = [word_to_id[lower_case(w, lower) if lower_case(w, lower) in word_to_id else '<UNK>'] for w in str_words]
 
     # Skip characters that are not in the training set
     chars = [[char_to_id[c] for c in w if c in char_to_id] for w in str_words]
@@ -1436,7 +1425,7 @@ for sentence in model_testing_sentences:
         'chars': chars,
     })
 
-#prediction
+# prediction
 predictions = []
 print("Prediction:")
 print("word : tag")
@@ -1458,19 +1447,18 @@ for data in final_test_data:
 
     # We are getting the predicted output from our model
     if use_gpu:
-        val,predicted_id = model(dwords.cuda(), chars2_mask.cuda(), chars2_length, d)
+        val, predicted_id = model(dwords.cuda(), chars2_mask.cuda(), chars2_length, d)
     else:
-        val,predicted_id = model(dwords, chars2_mask, chars2_length, d)
+        val, predicted_id = model(dwords, chars2_mask, chars2_length, d)
 
-    pred_chunks = get_chunks(predicted_id,tag_to_id)
-    temp_list_tags=['NA']*len(words)
+    pred_chunks = get_chunks(predicted_id, tag_to_id)
+    temp_list_tags = ['NA'] * len(words)
     for p in pred_chunks:
-        temp_list_tags[p[1]]=p[0]
+        temp_list_tags[p[1]] = p[0]
 
-    for word,tag in zip(words,temp_list_tags):
-        print(word,':',tag)
+    for word, tag in zip(words, temp_list_tags):
+        print(word, ':', tag)
     print('\n')
-
 
 # ### References
 
