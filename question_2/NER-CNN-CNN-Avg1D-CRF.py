@@ -11,7 +11,7 @@
 # 
 # 1. Getting Ready with the data 
 # 2. Network Definition. This includes
-#     * CNN Encoder for Character Level representation.
+#     * CNN Encoder for Character Level represefntation.
 #     * Bi-directional LSTM for Word-Level Encoding.
 #     * Conditional Random Fields(CRF) for output decoding
 # 3. Training
@@ -53,7 +53,6 @@
 #
 #
 #  To get started we first import the necessary libraries
-
 
 from collections import OrderedDict
 
@@ -104,7 +103,7 @@ parameters['crf'] = 1  # Use CRF (0 to disable)
 parameters['dropout'] = 0.5  # Dropout on the input (0 = no dropout)
 parameters['epoch'] = 50  # Number of epochs to run"
 parameters['weights'] = ""  # path to Pretrained for from a previous run
-parameters['name'] = "self-trained-model-cnn"  # Model name
+parameters['name'] = "self-trained-model-cnn-avg_pool_1d"  # Model name
 parameters['gradient_clip'] = 5.0
 parameters['char_mode'] = "CNN"
 models_path = "./models/"  # path to saved models
@@ -119,6 +118,14 @@ parameters['reload'] = "./models/pre-trained-model"
 # Constants
 START_TAG = '<START>'
 STOP_TAG = '<STOP>'
+
+# In[5]:
+
+
+use_gpu
+
+# In[6]:
+
 
 # paths to files
 # To stored mapping file
@@ -917,6 +924,7 @@ class FinalNN(nn.Module):
         #         self.lstm = nn.LSTM(embedding_dim+self.out_channels, hidden_dim, bidirectional=True)
 
         self.word_cnn_layer = nn.Conv1d(in_channels=1, out_channels=4, kernel_size=26)
+        self.word_avg_pool = nn.AvgPool1d(3, stride=1, padding=1)
 
         # Linear layer which maps the output of the bidirectional LSTM into tag space.
         self.hidden2tag = nn.Linear(hidden_dim * 2, self.tagset_size)
@@ -1003,10 +1011,12 @@ class FinalNN(nn.Module):
         cnn_out = self.word_cnn_layer(embeds)
         #         print(cnn_out.shape)
 
+        cnn_out = self.word_avg_pool(cnn_out)
+
         ## Reshaping the outputs from the CNN layer
         cnn_out = cnn_out.view(len(sentence), 2 * self.hidden_dim)
 
-        ## Dropout on the CNN output
+        ## CNN on the lstm output
         cnn_out = self.dropout(cnn_out)
 
         ## Linear layer converts the output vectors to tag space

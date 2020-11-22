@@ -1287,7 +1287,7 @@ if not parameters['reload']:
     model.train(True)
     start = time.time()
     #     loader = DataLoader(train_data, batch_size=32, shuffle=True)
-    for epoch in range(1, number_of_epochs):
+    for epoch in range(1, number_of_epochs+1):
         loss = 0.0
         for counter, index in enumerate(np.random.permutation(len(train_data))):
             count += 1
