@@ -103,7 +103,7 @@ parameters['crf'] = 1  # Use CRF (0 to disable)
 parameters['dropout'] = 0.5  # Dropout on the input (0 = no dropout)
 parameters['epoch'] = 50  # Number of epochs to run"
 parameters['weights'] = ""  # path to Pretrained for from a previous run
-parameters['name'] = "self-trained-model-cnn-max_pool_1d"  # Model name
+parameters['name'] = "self-trained-model-cnn-max_pool_1d_2_2_1"  # Model name
 parameters['gradient_clip'] = 5.0
 parameters['char_mode'] = "CNN"
 models_path = "./models/"  # path to saved models
@@ -923,8 +923,8 @@ class FinalNN(nn.Module):
 
         #         self.lstm = nn.LSTM(embedding_dim+self.out_channels, hidden_dim, bidirectional=True)
 
-        self.word_cnn_layer = nn.Conv1d(in_channels=1, out_channels=4, kernel_size=26)
-        self.word_max_pool = nn.MaxPool1d(3, stride=1, padding=1)
+        self.word_cnn_layer = nn.Conv1d(in_channels=1, out_channels=hidden_dim*2, kernel_size=(embedding_dim+self.out_channels)*3, stride=embedding_dim+self.out_channels, padding=embedding_dim+self.out_channels)
+        self.word_max_pool = nn.MaxPool1d(2, stride=2, padding=1)
 
         # Linear layer which maps the output of the bidirectional LSTM into tag space.
         self.hidden2tag = nn.Linear(hidden_dim * 2, self.tagset_size)

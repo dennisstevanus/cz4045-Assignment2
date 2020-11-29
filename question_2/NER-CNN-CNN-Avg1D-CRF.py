@@ -923,8 +923,8 @@ class FinalNN(nn.Module):
 
         #         self.lstm = nn.LSTM(embedding_dim+self.out_channels, hidden_dim, bidirectional=True)
 
-        self.word_cnn_layer = nn.Conv1d(in_channels=1, out_channels=4, kernel_size=26)
-        self.word_avg_pool = nn.AvgPool1d(3, stride=1, padding=1)
+        self.word_cnn_layer = nn.Conv1d(in_channels=1, out_channels=hidden_dim*2, kernel_size=(embedding_dim+self.out_channels)*3, stride=embedding_dim+self.out_channels, padding=embedding_dim+self.out_channels)
+        self.word_avg_pool = nn.AvgPool1d(4, stride=4, padding=2)
 
         # Linear layer which maps the output of the bidirectional LSTM into tag space.
         self.hidden2tag = nn.Linear(hidden_dim * 2, self.tagset_size)
