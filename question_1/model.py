@@ -1,7 +1,65 @@
+import logging
 import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+class FFNNModel(nn.Module):
+    def set_batch_size(self, batch_size):
+        self.batch_size = batch_size
+
+    def __init__(self, ntoken, ninp, nhid, ctxsz, dropout, tie_weights, nlayers=1, batch_size=1):
+        super(FFNNModel, self).__init__()
+        self.batch_size = batch_size
+        self.encoder = nn.Embedding(ntoken, ninp)
+        self.drop = nn.Dropout(dropout)
+        self.nlayers = nlayers
+
+        # Linear function
+        self.fc1 = nn.Linear(ninp * (ctxsz - 1), nhid)
+        # Non-linearity
+        self.act1 = nn.Softmax()
+
+        if nlayers == 2:
+            # Linear function
+            self.fc2 = nn.Linear(nhid, nhid)
+            # Non-linearity
+            self.act2 = nn.Softmax()
+        elif nlayers > 2:
+            raise ValueError('Only implemented until nlayers=2.')
+
+        # Linear function
+        self.decoder = nn.Linear(nhid, ntoken)
+
+        if tie_weights:
+            if nhid != ninp:
+                raise ValueError('When using the tied flag, nhid must be equal to emsize')
+            self.decoder.weight = self.encoder.weight
+
+    def forward(self, x):
+        embeds = self.drop(self.encoder(x).view((self.batch_size, -1)))
+
+        # Linear function
+        out = self.fc1(embeds)
+        # Non-linearity
+        out = self.act1(out)
+        # Second dropout
+        out = self.drop(out)
+
+        if self.nlayers == 2:
+            # Linear function
+            out = self.fc2(out)
+            # Non-linearity
+            out = self.act2(out)
+            # Third dropout
+            out = self.drop(out)
+
+        # Linear function
+        out = self.decoder(out)
+        log_probs = F.log_softmax(out, dim=-1)
+        return log_probs
+
 
 class RNNModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
@@ -17,7 +75,7 @@ class RNNModel(nn.Module):
             try:
                 nonlinearity = {'RNN_TANH': 'tanh', 'RNN_RELU': 'relu'}[rnn_type]
             except KeyError:
-                raise ValueError( """An invalid option for `--model` was supplied,
+                raise ValueError("""An invalid option for `--model` was supplied,
                                  options are ['LSTM', 'GRU', 'RNN_TANH' or 'RNN_RELU']""")
             self.rnn = nn.RNN(ninp, nhid, nlayers, nonlinearity=nonlinearity, dropout=dropout)
         self.decoder = nn.Linear(nhid, ntoken)
@@ -60,6 +118,7 @@ class RNNModel(nn.Module):
                     weight.new_zeros(self.nlayers, bsz, self.nhid))
         else:
             return weight.new_zeros(self.nlayers, bsz, self.nhid)
+
 
 # Temporarily leave PositionalEncoding module here. Will be moved somewhere else.
 class PositionalEncoding(nn.Module):
@@ -104,6 +163,7 @@ class PositionalEncoding(nn.Module):
 
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
+
 
 class TransformerModel(nn.Module):
     """Container module with an encoder, a recurrent or transformer module, and a decoder."""
