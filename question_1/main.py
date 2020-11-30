@@ -205,10 +205,10 @@ def evaluate(data_source):
     with torch.no_grad():
         if args.model == 'FFNN':
             for batch, eval_batch in enumerate(dataloader_evaluate):
-                data, targets = eval_batch
+                data, targets = eval_batch          # load data from data loader
                 data = data.squeeze(0)
-                output = model(data)
-                total_loss += len(data) * criterion(output, targets).item()
+                output = model(data)                # pass evaluation data through the model
+                total_loss += len(data) * criterion(output, targets).item()  # accumulate total loss
         else:
             for i in range(0, data_source.size(0) - 1, args.bptt):
                 data, targets = get_batch(data_source, i)
@@ -232,16 +232,17 @@ def train():
         hidden = model.init_hidden(args.batch_size)
     if args.model == 'FFNN':
         for batch, train_batch in enumerate(dataloader):
-            data, targets = train_batch
-            data = data.squeeze(0)
-            model.zero_grad()
-            output = model(data)
-            loss = criterion(output, targets)
-            loss.backward()
-            optimizer.step()
+            data, targets = train_batch         # load data from data loader
+            data = data.squeeze(0)              # train_batch contain mini batched training
+            model.zero_grad()                   # reset gradient before calculating
+            output = model(data)                # pass training data through model
+            loss = criterion(output, targets)   # calculate loss
+            loss.backward()                     # propagate gradient through the network
+            optimizer.step()                    # update parameter according to optimizer policy
 
             total_loss += loss.item()
 
+            # logging stuff
             if batch % args.log_interval == 0 and batch > 0:
                 cur_loss = total_loss / args.log_interval
                 elapsed = time.time() - start_time
