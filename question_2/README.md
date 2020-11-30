@@ -34,27 +34,27 @@ ipython kernel install --user
 You can download the data files from within this repo [**over here**](https://github.com/TheAnig/NER-LSTM-CNN-Pytorch/tree/master/data)
 
 ## Content Information
-* `data`: Contains all the dataset used in this project
+*   `data`: Contains all the dataset used in this project
 
-* `images`: Contains diagrams of the neural network architecture
+*   `images`: Contains diagrams of the neural network architecture
 
-* `models`: Contains the original pre-trained model provided by the tutorial
+*   `models`: Contains the original pre-trained model provided by the tutorial
 
-* `results`: Contains accuracy and loss data from trained models
+*   `results`: Contains accuracy and loss data from trained models
 
-* Scripts: Below are the scripts of the templates for different variations of models with CNN layers as the word-level encoder. 
+*   Scripts: Below are the scripts of the templates for different variations of models with CNN layers as the word-level encoder. 
 To run each of the scripts, please open a terminal in this subproject folder(`question_2`):  
 
-```bash
-python <script_name>.py
-```
+    ```bash
+    python <script_name>.py
+    ```
 
-  * `NER-CNN-CNN-CRF`: Contains the python script template for the model with a single layer of CNN word-level encoder
-
-  * `NER-CNN-CNN-Avg1D-CRF`: Contains the python script template for the model with a single layer of CNN and an average pooling layer word-level encoder
-
-  * `NER-CNN-CNN-Maxpool1D-CRF`: Contains the python script template for the model with a single layer of CNN and a max pooling layer word-level encoder
-
-  * `NER-CNN-CNN2-CRF`: Contains the python script template for the model with two layers of CNN word-level encoder
-
-  * `NER-CNN-CNN3-CRF`: Contains the python script template for the model with three layers of CNN word-level encoder
+    * `NER-CNN-CNN-CRF`: Contains the python script template for the model with a single layer of CNN word-level encoder
+    
+    * `NER-CNN-CNN-Avg1D-CRF`: Contains the python script template for the model with a single layer of CNN and an average pooling layer word-level encoder
+    
+    * `NER-CNN-CNN-Maxpool1D-CRF`: Contains the python script template for the model with a single layer of CNN and a max pooling layer word-level encoder
+    
+    * `NER-CNN-CNN2-CRF`: Contains the python script template for the model with two layers of CNN word-level encoder
+    
+    * `NER-CNN-CNN3-CRF`: Contains the python script template for the model with three layers of CNN word-level encoder
