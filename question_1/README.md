@@ -11,7 +11,8 @@ python generate.py --cuda --model FFNN                                # Generate
 
 To run:
 1. Install pytorch and numpy. For Windows, [numpy version cannot be 1.19.4](https://github.com/numpy/numpy/issues/17726)
-2. Run command as noted in this README.md
+2. Change working directory to this folder (question_1)
+3. Run command as noted in this README.md
 
 See below for more options and details. Below is the original project's README
 # Word-level language modeling RNN
