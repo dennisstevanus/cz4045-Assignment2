@@ -42,4 +42,4 @@ Error troubleshooting
     ```
     ModuleNotFoundError: No module named 'data'
     ```
-    most likely you have not done the Installation step 7. Please do the instructions described in step 7.
+    most likely you have not done the Installation step 6. Please do the instructions described in step 6.
