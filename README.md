@@ -21,7 +21,7 @@ Below are step by step guide to clone this repository and install the required l
 6.  Setup the `PYTHONPATH` to include `project root directory` in the the `PYTHONPATH`. Tutorial on how to set this up is on this [link](https://bic-berkeley.github.io/psych-214-fall-2016/using_pythonpath.html). 
     Otherwise, it can also be done by using `PyCharm IDE` and then using the IDE's [code run assistance](https://www.jetbrains.com/help/pycharm/code-running-assistance-tutorial.html) which by default add `project root directory` to the `PYTHONPATH`. 
 
-Note: You may need to install a specific version of [Pytroch](https://pytorch.org/) based on your Computer environment(GPU availability, CUDA version, etc.).
+Note: You may need to install a specific version of [Pytorch](https://pytorch.org/) based on your Computer environment(GPU availability, CUDA version, etc.).
 Therefore, please head directly to the [installation guide](https://pytorch.org/get-started/locally/) from the website to install it based on your environment. 
 
 
