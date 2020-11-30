@@ -42,12 +42,16 @@ You can download the data files from within this repo [**over here**](https://gi
 
 * `results`: Contains accuracy and loss data from trained models
 
-* Scripts: Below are the scripts of the templates for different variations of models with CNN layers as the word-level encoder. To run each of the scripts:
-`python <script_name>.py`
+* Scripts: Below are the scripts of the templates for different variations of models with CNN layers as the word-level encoder. 
+To run each of the scripts, please open a terminal in this subproject folder(`question_2`):  
+
+```bash
+python <script_name>.py
+```
 
   * `NER-CNN-CNN-CRF`: Contains the python script template for the model with a single layer of CNN word-level encoder
 
-  * `NER-CNN-CNN-Avg1DCRF`: Contains the python script template for the model with a single layer of CNN and an average pooling layer word-level encoder
+  * `NER-CNN-CNN-Avg1D-CRF`: Contains the python script template for the model with a single layer of CNN and an average pooling layer word-level encoder
 
   * `NER-CNN-CNN-Maxpool1D-CRF`: Contains the python script template for the model with a single layer of CNN and a max pooling layer word-level encoder
 
