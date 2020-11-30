@@ -1,3 +1,20 @@
+# Language Modelling and Word Embeddings using Feed-Forward Neural Network
+
+This project attempts to model language using Feed-Forward Neural Network. 
+
+Useful commands to execute:
+```bash
+python main.py --cuda --model FFNN --epoch 100 --lr 0.001             # Train FFNN for 100 epoch, learning rate 0.001 
+python main.py --cuda --model FFNN --epoch 100 --lr 0.001 --nlayers 2 # Train FFNN with 2 hidden layers
+python generate.py --cuda --model FFNN                                # Generate sample from FFNN using cuda
+```
+
+To run:
+1. Install pytorch and numpy. For Windows, [numpy version cannot be 1.19.4](https://github.com/numpy/numpy/issues/17726)
+2. Change working directory to this folder (question_1)
+3. Run command as noted in this README.md
+
+See below for more options and details. Below is the original project's README
 # Word-level language modeling RNN
 
 This example trains a multi-layer RNN (Elman, GRU, or LSTM) on a language modeling task.

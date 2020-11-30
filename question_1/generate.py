@@ -30,6 +30,8 @@ parser.add_argument('--temperature', type=float, default=1.0,
                     help='temperature - higher will increase diversity')
 parser.add_argument('--log-interval', type=int, default=100,
                     help='reporting interval')
+parser.add_argument('--model', type=str, default='LSTM',
+                    help='type of recurrent net (RNN_TANH, RNN_RELU, LSTM, GRU, Transformer)')
 args = parser.parse_args()
 
 # Set the random seed manually for reproducibility.
@@ -50,10 +52,14 @@ model.eval()
 corpus = data.Corpus(args.data)
 ntokens = len(corpus.dictionary)
 
-is_transformer_model = hasattr(model, 'model_type') and model.model_type == 'Transformer'
-if not is_transformer_model:
+is_transformer_model = hasattr(model, 'model_type') and args.model == 'Transformer'
+if not is_transformer_model and args.model != 'FFNN':
     hidden = model.init_hidden(1)
-input = torch.randint(ntokens, (1, 1), dtype=torch.long).to(device)
+if args.model == 'FFNN':
+    input = torch.randint(ntokens, (7, 1), dtype=torch.long).to(device)
+    model.set_batch_size(1)
+else:
+    input = torch.randint(ntokens, (1, 1), dtype=torch.long).to(device)
 
 with open(args.outf, 'w') as outf:
     with torch.no_grad():  # no tracking history
@@ -64,6 +70,10 @@ with open(args.outf, 'w') as outf:
                 word_idx = torch.multinomial(word_weights, 1)[0]
                 word_tensor = torch.Tensor([[word_idx]]).long().to(device)
                 input = torch.cat([input, word_tensor], 0)
+            elif args.model == 'FFNN':
+                output = model(input)
+                word_weights = output.squeeze().div(args.temperature).exp().cpu()
+                word_idx = torch.multinomial(word_weights, 1)[0]
             else:
                 output, hidden = model(input, hidden)
                 word_weights = output.squeeze().div(args.temperature).exp().cpu()
